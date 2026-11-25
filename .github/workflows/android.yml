@@ -11,28 +11,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Baixar projeto
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - name: Configurar Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Extract project
+      - name: Extrair projeto
         run: |
           unzip -o escudo_mestre_v2.zip -d /tmp/escudo
+          cp -R /tmp/escudo/app .
           cp /tmp/escudo/build.gradle.kts .
           cp /tmp/escudo/settings.gradle.kts .
           cp /tmp/escudo/gradle.properties .
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
 
-      - name: Build APK
+      - name: Construir APK
         run: gradle assembleDebug
 
-      - uses: actions/upload-artifact@v4
+      - name: Salvar APK
+        uses: actions/upload-artifact@v4
         with:
           name: ESCUDO-DO-MESTRE-APK
           path: app/build/outputs/apk/debug/app-debug.apk
