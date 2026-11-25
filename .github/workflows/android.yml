@@ -19,8 +19,7 @@ jobs:
 
       - name: Extract project
         run: |
-          unzip escudo_mestre_source_v1.zip -d /tmp/escudo
-          cp -R /tmp/escudo/. .
+        unzip escudo_mestre_source_v1_corrigido.zip -d /tmp/escudo
 
       - uses: gradle/actions/setup-gradle@v4
         with:
