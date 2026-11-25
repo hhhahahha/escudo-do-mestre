@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Baixar projeto
         uses: actions/checkout@v4
@@ -22,7 +21,7 @@ jobs:
 
       - name: Extrair projeto
         run: |
-          unzip -o escudo_mestre_v1_5.zip -d /tmp/escudo
+          unzip -o escudo_mestre_v1_6.zip -d /tmp/escudo
           cp -R /tmp/escudo/app .
           cp /tmp/escudo/build.gradle.kts .
           cp /tmp/escudo/settings.gradle.kts .
@@ -39,6 +38,6 @@ jobs:
       - name: Salvar APK
         uses: actions/upload-artifact@v4
         with:
-          name: ESCUDO-DO-MESTRE-APK-v1.5
+          name: ESCUDO-DO-MESTRE-APK-v1.6
           path: app/build/outputs/apk/debug/app-debug.apk
           
