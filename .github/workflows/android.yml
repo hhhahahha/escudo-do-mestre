@@ -1,3 +1,4 @@
+
 name: Build ESCUDO DO MESTRE APK
 
 on:
@@ -31,7 +32,7 @@ jobs:
           ANDROID_SIGNING_BUNDLE: ${{ secrets.ANDROID_SIGNING_BUNDLE }}
         run: |
           if [ -z "$ANDROID_SIGNING_BUNDLE" ]; then
-            echo "::error::Falta cadastrar o segredo ANDROID_SIGNING_BUNDLE nas configurações do repositório."
+            echo "::error::Falta cadastrar o segredo ANDROID_SIGNING_BUNDLE."
             exit 1
           fi
           printf '%s' "$ANDROID_SIGNING_BUNDLE" > "$RUNNER_TEMP/escudo-signing.json"
