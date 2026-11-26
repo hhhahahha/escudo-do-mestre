@@ -20,29 +20,53 @@ jobs:
 
       - name: Extrair projeto
         run: |
-          unzip -o escudo_mestre_v1_19.zip -d /tmp/escudo
+          unzip -o escudo_mestre_v1_20.zip -d /tmp/escudo
           cp -R /tmp/escudo/app .
           cp /tmp/escudo/build.gradle.kts .
           cp /tmp/escudo/settings.gradle.kts .
           cp /tmp/escudo/gradle.properties .
 
-      - name: Verificar configuração Firebase
+      - name: Preparar assinatura permanente
+        env:
+          ANDROID_SIGNING_BUNDLE: ${{ secrets.ANDROID_SIGNING_BUNDLE }}
+        run: |
+          if [ -z "$ANDROID_SIGNING_BUNDLE" ]; then
+            echo "::error::Falta cadastrar o segredo ANDROID_SIGNING_BUNDLE nas configurações do repositório."
+            exit 1
+          fi
+          printf '%s' "$ANDROID_SIGNING_BUNDLE" > "$RUNNER_TEMP/escudo-signing.json"
+          jq -r '.keystoreBase64' "$RUNNER_TEMP/escudo-signing.json" | base64 --decode > "$RUNNER_TEMP/escudo-release.jks"
+          test -s "$RUNNER_TEMP/escudo-release.jks"
+          echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/escudo-release.jks" >> "$GITHUB_ENV"
+          echo "ANDROID_KEYSTORE_PASSWORD=$(jq -r '.storePassword' "$RUNNER_TEMP/escudo-signing.json")" >> "$GITHUB_ENV"
+          echo "ANDROID_KEY_ALIAS=$(jq -r '.keyAlias' "$RUNNER_TEMP/escudo-signing.json")" >> "$GITHUB_ENV"
+          echo "ANDROID_KEY_PASSWORD=$(jq -r '.keyPassword' "$RUNNER_TEMP/escudo-signing.json")" >> "$GITHUB_ENV"
+          rm -f "$RUNNER_TEMP/escudo-signing.json"
+
+      - name: Verificar estrutura e Firebase
         run: |
           test -f app/src/main/java/br/com/escudodomestre/MainActivity.kt
           test -f app/google-services.json
           grep -q 'com.google.firebase:firebase-auth' app/build.gradle.kts
           grep -q 'com.google.firebase:firebase-firestore' app/build.gradle.kts
+          grep -q 'versionCode = 21' app/build.gradle.kts
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
 
-      - name: Construir APK
-        run: gradle assembleDebug
+      - name: Construir APK assinado
+        run: gradle assembleRelease
+
+      - name: Verificar assinatura do APK
+        run: |
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+          "$APKSIGNER" verify --verbose app/build/outputs/apk/release/app-release.apk
 
       - name: Salvar APK
         uses: actions/upload-artifact@v4
         with:
-          name: ESCUDO-DO-MESTRE-APK-v1.19
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: ESCUDO-DO-MESTRE-APK-v1.20
+          path: app/build/outputs/apk/release/app-release.apk
+          
