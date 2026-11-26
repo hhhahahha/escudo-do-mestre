@@ -1,3 +1,4 @@
+
 name: Build ESCUDO DO MESTRE APK
 
 on:
@@ -20,7 +21,7 @@ jobs:
 
       - name: Extrair projeto
         run: |
-          unzip -o escudo_mestre_v1_23.zip -d /tmp/escudo
+          unzip -o escudo_mestre_v1_24.zip -d /tmp/escudo
           cp -R /tmp/escudo/app .
           cp /tmp/escudo/build.gradle.kts .
           cp /tmp/escudo/settings.gradle.kts .
@@ -35,6 +36,7 @@ jobs:
             exit 1
           fi
           printf '%s' "$ANDROID_SIGNING_BUNDLE" > "$RUNNER_TEMP/escudo-signing.json"
+          jq -e '.keystoreBase64 and .storePassword and .keyAlias and .keyPassword' "$RUNNER_TEMP/escudo-signing.json" > /dev/null
           jq -r '.keystoreBase64' "$RUNNER_TEMP/escudo-signing.json" | base64 --decode > "$RUNNER_TEMP/escudo-release.jks"
           test -s "$RUNNER_TEMP/escudo-release.jks"
           echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/escudo-release.jks" >> "$GITHUB_ENV"
@@ -43,20 +45,26 @@ jobs:
           echo "ANDROID_KEY_PASSWORD=$(jq -r '.keyPassword' "$RUNNER_TEMP/escudo-signing.json")" >> "$GITHUB_ENV"
           rm -f "$RUNNER_TEMP/escudo-signing.json"
 
-      - name: Verificar estrutura, nuvem, imagens e compartilhamento
+      - name: Verificar estrutura, versão e compartilhamento nativo
         run: |
           test -f app/src/main/java/br/com/escudodomestre/MainActivity.kt
           test -f app/google-services.json
           test -f app/src/main/res/xml/file_paths.xml
           grep -q 'com.google.firebase:firebase-auth' app/build.gradle.kts
           grep -q 'com.google.firebase:firebase-firestore' app/build.gradle.kts
-          grep -q 'versionCode = 24' app/build.gradle.kts
-          grep -q 'versionName = "1.23"' app/build.gradle.kts
+          grep -q 'versionCode = 25' app/build.gradle.kts
+          grep -q 'versionName = "1.24"' app/build.gradle.kts
           grep -q 'pendingImagePageIndex' app/src/main/java/br/com/escudodomestre/MainActivity.kt
           grep -q 'saveCloudCoverLocally(context, cloud.id, cloudPage.id' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'createNotesSharePdf' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'androidx.core.content.FileProvider' app/src/main/AndroidManifest.xml
+          grep -q 'Intent.ACTION_SEND_MULTIPLE' app/src/main/java/br/com/escudodomestre/MainActivity.kt
+          grep -q 'putParcelableArrayListExtra(Intent.EXTRA_STREAM' app/src/main/java/br/com/escudodomestre/MainActivity.kt
+          grep -q 'FileProvider.getUriForFile' app/src/main/java/br/com/escudodomestre/MainActivity.kt
+          grep -q 'addOnLayoutChangeListener' app/src/main/java/br/com/escudodomestre/MainActivity.kt
           grep -q 'dragAndDropTarget' app/src/main/java/br/com/escudodomestre/MainActivity.kt
+          if grep -Eq 'createNotesSharePdf|PdfDocument|application/pdf' app/src/main/java/br/com/escudodomestre/MainActivity.kt; then
+            echo "::error::O compartilhamento em PDF não deve existir nesta versão."
+            exit 1
+          fi
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -69,11 +77,12 @@ jobs:
       - name: Verificar assinatura do APK
         run: |
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+          test -n "$APKSIGNER"
           "$APKSIGNER" verify --verbose app/build/outputs/apk/release/app-release.apk
 
       - name: Salvar APK
         uses: actions/upload-artifact@v4
         with:
-          name: ESCUDO-DO-MESTRE-APK-v1.23
+          name: ESCUDO-DO-MESTRE-APK-v1.24
           path: app/build/outputs/apk/release/app-release.apk
           
