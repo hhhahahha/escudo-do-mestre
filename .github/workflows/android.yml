@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          unzip -o escudo_mestre_v1_30_corrigido.zip -d /tmp/escudo
+          unzip -o escudo_mestre_v1_31.zip -d /tmp/escudo
           cp -R /tmp/escudo/app .
           cp /tmp/escudo/build.gradle.kts .
           cp /tmp/escudo/settings.gradle.kts .
@@ -80,13 +80,14 @@ jobs:
           test -f app/src/main/res/xml/file_paths.xml
           grep -q 'com.google.firebase:firebase-auth' app/build.gradle.kts
           grep -q 'com.google.firebase:firebase-firestore' app/build.gradle.kts
-          grep -q 'versionCode = 31' app/build.gradle.kts
-          grep -q 'versionName = "1.30"' app/build.gradle.kts
+          grep -q 'versionCode = 32' app/build.gradle.kts
+          grep -q 'versionName = "1.31"' app/build.gradle.kts
           grep -q 'NoteInlineBoxSpan' "$MAIN"
-          grep -Fq 'availableWidthPx = availableWidthPx' "$MAIN"
+          grep -Fq 'measuredWidth = (availableWidthPx / 2)' "$MAIN"
+          grep -Fq 'textSize = 16f * density' "$MAIN"
+          grep -Fq 'cardDrawWidth' "$MAIN"
           grep -Fq 'StaticLayout.Builder.obtain' "$MAIN"
           grep -Fq 'layout.draw(canvas)' "$MAIN"
-          grep -Fq 'textTopOffset = verticalPadding' "$MAIN"
           grep -Fq 'private class ImageFlowMarginSpan(' "$MAIN"
           grep -Fq 'private fun configurePaperEditor(' "$MAIN"
           grep -Fq 'fun updatePageAndRefreshEditor' "$MAIN"
@@ -116,6 +117,6 @@ jobs:
       - name: Salvar APK
         uses: actions/upload-artifact@v4
         with:
-          name: ESCUDO-DO-MESTRE-APK-v1.30
+          name: ESCUDO-DO-MESTRE-APK-v1.31
           path: app/build/outputs/apk/release/app-release.apk
           
