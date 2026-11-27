@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          unzip -o escudo_mestre_v1_32.zip -d /tmp/escudo
+          unzip -o escudo_mestre_v1_32_corrigido.zip -d /tmp/escudo
           cp -R /tmp/escudo/app .
           cp /tmp/escudo/build.gradle.kts .
           cp /tmp/escudo/settings.gradle.kts .
@@ -85,6 +85,9 @@ jobs:
           grep -q 'NoteInlineBoxSpan' "$MAIN"
           grep -Fq 'val maxSlotWidth = (availableWidthPx / 2)' "$MAIN"
           grep -Fq 'textSize = 20f * scaledDensity' "$MAIN"
+          grep -Fq 'maxCardWidth.toFloat() - horizontalPadding * 2f - reservedForImage' "$MAIN"
+          grep -Fq '(maxCardWidth.toFloat() - horizontalPadding * 2f).toInt()' "$MAIN"
+          grep -Fq 'textScaleX = 1f' "$MAIN"
           grep -Fq 'cardDrawWidth' "$MAIN"
           grep -Fq 'StaticLayout.Builder.obtain' "$MAIN"
           grep -Fq 'layout.draw(canvas)' "$MAIN"
