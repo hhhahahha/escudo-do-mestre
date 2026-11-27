@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          unzip -o escudo_mestre_v1_34.zip -d /tmp/escudo
+          unzip -o escudo_mestre_v1_35.zip -d /tmp/escudo
           cp -R /tmp/escudo/app .
           cp /tmp/escudo/build.gradle.kts .
           cp /tmp/escudo/settings.gradle.kts .
@@ -69,7 +69,7 @@ jobs:
 
           unset ANDROID_SIGNING_BUNDLE STORE_PASSWORD KEY_ALIAS KEY_PASSWORD
 
-      - name: Verificar estrutura, versão e recursos
+      - name: Verificar estrutura, versão, perfil e histórico do editor
         shell: bash
         run: |
           set -euo pipefail
@@ -80,18 +80,29 @@ jobs:
           test -f app/src/main/res/xml/file_paths.xml
           grep -q 'com.google.firebase:firebase-auth' app/build.gradle.kts
           grep -q 'com.google.firebase:firebase-firestore' app/build.gradle.kts
-          grep -q 'versionCode = 35' app/build.gradle.kts
-          grep -q 'versionName = "1.34"' app/build.gradle.kts
+          grep -q 'versionCode = 36' app/build.gradle.kts
+          grep -q 'versionName = "1.35"' app/build.gradle.kts
+
+          grep -q 'private class NoteEditorHistory' "$MAIN"
+          grep -Fq 'fun applyEditorHistory(isRedo: Boolean)' "$MAIN"
+          grep -Fq 'recordTextChangeBefore' "$MAIN"
+          grep -Fq 'recordProgrammaticChange' "$MAIN"
+          grep -Fq 'recordEditorBeforeProgrammaticChange' "$MAIN"
+          grep -Fq 'Text("↶"' "$MAIN"
+          grep -Fq 'Text("↷"' "$MAIN"
+
+          grep -Fq 'label = { Text("Nome de exibição", fontSize = 12.sp) }' "$MAIN"
+          grep -Fq 'E-mail para entrar ou cadastrar' "$MAIN"
+          grep -Fq 'Senha (mínimo 6 caracteres)' "$MAIN"
+          grep -Fq 'Conta conectada' "$MAIN"
+
+          ! grep -Fq 'Nome de usuário' "$MAIN"
+          ! grep -Fq 'E-mail da conta' "$MAIN"
+          ! grep -Fq 'Sobre você' "$MAIN"
+
           grep -q 'NoteInlineBoxSpan' "$MAIN"
-          grep -Fq 'val slotWidth = (availableWidthPx / 2)' "$MAIN"
-          grep -Fq 'textSize = paint.textSize * 0.92f' "$MAIN"
-          grep -Fq 'val oneLineHeight = kotlin.math.ceil(fontMetrics.descent - fontMetrics.ascent).toInt()' "$MAIN"
-          grep -Fq 'cardHeight = maxOf(oneLineHeight, layout.height)' "$MAIN"
-          grep -Fq 'it.descent = 0' "$MAIN"
-          grep -Fq 'TextUtils.ellipsize' "$MAIN"
           grep -Fq 'private class ImageFlowMarginSpan(' "$MAIN"
           grep -Fq 'private fun configurePaperEditor(' "$MAIN"
-          grep -Fq 'fun updatePageAndRefreshEditor' "$MAIN"
           grep -Fq 'requestBoxThumbnailAsync' "$MAIN"
           grep -Fq 'boxImageCopyExecutor.execute' "$MAIN"
           grep -Fq 'CLOUD_IMAGE_MAX_SIDE = 1536' "$MAIN"
@@ -118,6 +129,6 @@ jobs:
       - name: Salvar APK
         uses: actions/upload-artifact@v4
         with:
-          name: ESCUDO-DO-MESTRE-APK-v1.34
+          name: ESCUDO-DO-MESTRE-APK-v1.35
           path: app/build/outputs/apk/release/app-release.apk
           
