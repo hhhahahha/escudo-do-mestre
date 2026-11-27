@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Baixar projeto
         uses: actions/checkout@v4
@@ -22,7 +21,7 @@ jobs:
 
       - name: Extrair projeto
         run: |
-          unzip -o escudo_mestre_v1_27.zip -d /tmp/escudo
+          unzip -o escudo_mestre_v1_28.zip -d /tmp/escudo
           cp -R /tmp/escudo/app .
           cp /tmp/escudo/build.gradle.kts .
           cp /tmp/escudo/settings.gradle.kts .
@@ -36,61 +35,35 @@ jobs:
             echo "::error::Falta cadastrar o segredo ANDROID_SIGNING_BUNDLE."
             exit 1
           fi
-
           printf '%s' "$ANDROID_SIGNING_BUNDLE" > "$RUNNER_TEMP/escudo-signing.json"
-
           jq -e '.keystoreBase64 and .storePassword and .keyAlias and .keyPassword' "$RUNNER_TEMP/escudo-signing.json" > /dev/null
-
           jq -r '.keystoreBase64' "$RUNNER_TEMP/escudo-signing.json" | base64 --decode > "$RUNNER_TEMP/escudo-release.jks"
-
           test -s "$RUNNER_TEMP/escudo-release.jks"
-
           echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/escudo-release.jks" >> "$GITHUB_ENV"
           echo "ANDROID_KEYSTORE_PASSWORD=$(jq -r '.storePassword' "$RUNNER_TEMP/escudo-signing.json")" >> "$GITHUB_ENV"
           echo "ANDROID_KEY_ALIAS=$(jq -r '.keyAlias' "$RUNNER_TEMP/escudo-signing.json")" >> "$GITHUB_ENV"
           echo "ANDROID_KEY_PASSWORD=$(jq -r '.keyPassword' "$RUNNER_TEMP/escudo-signing.json")" >> "$GITHUB_ENV"
-
           rm -f "$RUNNER_TEMP/escudo-signing.json"
 
-      - name: Verificar estrutura e recursos
+      - name: Verificar estrutura, versão e novos recursos
         run: |
           test -f app/src/main/java/br/com/escudodomestre/MainActivity.kt
           test -f app/google-services.json
           test -f app/src/main/res/xml/file_paths.xml
-
           grep -q 'com.google.firebase:firebase-auth' app/build.gradle.kts
           grep -q 'com.google.firebase:firebase-firestore' app/build.gradle.kts
-
-          grep -q 'versionCode = 28' app/build.gradle.kts
-          grep -q 'versionName = "1.27"' app/build.gradle.kts
-
-          grep -q 'pendingImagePageIndex' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'coverGalleryPicker' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'MAX_COVER_GALLERY_IMAGES' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'data class NoteBox' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'coverGallery' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'boxes = page.boxes' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'boxDialogTarget' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'DialogProperties(usePlatformDefaultWidth = false)' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-
-          grep -q 'loadCoverBitmapAsync' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'private fun BoxThumbnailImage' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'ImageView.ScaleType.FIT_CENTER' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'aspectRatio(1f)' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'CLOUD_IMAGE_MAX_SIDE = 768' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-
+          grep -q 'versionCode = 29' app/build.gradle.kts
+          grep -q 'versionName = "1.28"' app/build.gradle.kts
+          grep -q 'copyPickedImageToApp' app/src/main/java/br/com/escudodomestre/MainActivity.kt
+          grep -q 'ActivityResultContracts.PickVisualMedia()' app/src/main/java/br/com/escudodomestre/MainActivity.kt
+          grep -q 'ActivityResultContracts.PickMultipleVisualMedia(MAX_COVER_GALLERY_IMAGES)' app/src/main/java/br/com/escudodomestre/MainActivity.kt
+          grep -q 'NoteInlineBoxSpan' app/src/main/java/br/com/escudodomestre/MainActivity.kt
+          grep -q 'NoteBlock(kind = "box", boxId = box.id)' app/src/main/java/br/com/escudodomestre/MainActivity.kt
+          grep -q 'fitInside = true' app/src/main/java/br/com/escudodomestre/MainActivity.kt
+          grep -q 'CLOUD_IMAGE_MAX_SIDE = 1536' app/src/main/java/br/com/escudodomestre/MainActivity.kt
+          grep -q 'CLOUD_IMAGE_MAX_BYTES = 95_000' app/src/main/java/br/com/escudodomestre/MainActivity.kt
           grep -q 'Intent.ACTION_SEND_MULTIPLE' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'putParcelableArrayListExtra(Intent.EXTRA_STREAM' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'FileProvider.getUriForFile' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-
-          grep -q 'startDragAndDrop' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-          grep -q 'addOnLayoutChangeListener' app/src/main/java/br/com/escudodomestre/MainActivity.kt
           grep -q 'dragAndDropTarget' app/src/main/java/br/com/escudodomestre/MainActivity.kt
-
-          if grep -Eq 'createNotesSharePdf|PdfDocument|application/pdf' app/src/main/java/br/com/escudodomestre/MainActivity.kt; then
-            echo "::error::O compartilhamento em PDF não deve existir nesta versão."
-            exit 1
-          fi
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -109,6 +82,6 @@ jobs:
       - name: Salvar APK
         uses: actions/upload-artifact@v4
         with:
-          name: ESCUDO-DO-MESTRE-APK-v1.27
+          name: ESCUDO-DO-MESTRE-APK-v1.28
           path: app/build/outputs/apk/release/app-release.apk
           
