@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          unzip -o escudo_mestre_v1_30.zip -d /tmp/escudo
+          unzip -o escudo_mestre_v1_30_corrigido.zip -d /tmp/escudo
           cp -R /tmp/escudo/app .
           cp /tmp/escudo/build.gradle.kts .
           cp /tmp/escudo/settings.gradle.kts .
@@ -87,13 +87,15 @@ jobs:
           grep -Fq 'StaticLayout.Builder.obtain' "$MAIN"
           grep -Fq 'layout.draw(canvas)' "$MAIN"
           grep -Fq 'textTopOffset = verticalPadding' "$MAIN"
+          grep -Fq 'private class ImageFlowMarginSpan(' "$MAIN"
+          grep -Fq 'private fun configurePaperEditor(' "$MAIN"
           grep -Fq 'fun updatePageAndRefreshEditor' "$MAIN"
           grep -Fq 'requestBoxThumbnailAsync' "$MAIN"
           grep -Fq 'boxImageCopyExecutor.execute' "$MAIN"
-          grep -q 'CLOUD_IMAGE_MAX_SIDE = 1536' "$MAIN"
-          grep -q 'CLOUD_IMAGE_MAX_BYTES = 95_000' "$MAIN"
-          grep -q 'Intent.ACTION_SEND_MULTIPLE' "$MAIN"
-          grep -q 'dragAndDropTarget' "$MAIN"
+          grep -Fq 'CLOUD_IMAGE_MAX_SIDE = 1536' "$MAIN"
+          grep -Fq 'CLOUD_IMAGE_MAX_BYTES = 95_000' "$MAIN"
+          grep -Fq 'Intent.ACTION_SEND_MULTIPLE' "$MAIN"
+          grep -Fq 'dragAndDropTarget' "$MAIN"
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
