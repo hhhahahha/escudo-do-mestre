@@ -22,7 +22,7 @@ jobs:
       - name: Extrair projeto
         run: |
           set -euo pipefail
-          unzip -o escudo_mestre_v1_28_corrigido.zip -d /tmp/escudo
+          unzip -o escudo_mestre_v1_28_corrigido_v2.zip -d /tmp/escudo
           cp -R /tmp/escudo/app .
           cp /tmp/escudo/build.gradle.kts .
           cp /tmp/escudo/settings.gradle.kts .
@@ -85,6 +85,11 @@ jobs:
           grep -Fq 'ActivityResultContracts.PickVisualMedia()' "$MAIN"
           grep -Fq 'ActivityResultContracts.PickMultipleVisualMedia(MAX_COVER_GALLERY_IMAGES)' "$MAIN"
           grep -q 'NoteInlineBoxSpan' "$MAIN"
+          grep -Fq '(144f * density).toInt()' "$MAIN"
+          grep -Fq 'imageSide = if (thumbnail != null) (66f * density).toInt() else 0' "$MAIN"
+          grep -Fq 'getPrimaryHorizontal(spanStart)' "$MAIN"
+          grep -Fq 'height(listCoverHeight)' "$MAIN"
+          grep -Fq 'aspectRatio(coverRatio)' "$MAIN"
           grep -Fq 'NoteBlock(kind = "box", boxId = box.id)' "$MAIN"
           grep -q 'fitInside = true' "$MAIN"
           grep -q 'CLOUD_IMAGE_MAX_SIDE = 1536' "$MAIN"
