@@ -23,7 +23,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          unzip -o escudo_mestre_v1_36.zip -d /tmp/escudo
+          unzip -o escudo_mestre_v1_36_corrigido.zip -d /tmp/escudo
           cp -R /tmp/escudo/app .
           cp /tmp/escudo/build.gradle.kts .
           cp /tmp/escudo/settings.gradle.kts .
@@ -93,9 +93,13 @@ jobs:
           grep -Fq 'boxImageCopyExecutor = Executors.newFixedThreadPool(3)' "$MAIN"
           grep -Fq 'private fun shareBoxWithOtherApps(' "$MAIN"
           grep -Fq 'shareBoxWithOtherApps(context, dialogBox)' "$MAIN"
-          grep -Fq 'if (targetPageIndex == 0)' "$MAIN"
-          grep -Fq 'draggingInlineImageId' "$MAIN"
 
+          grep -Fq 'if (targetPageIndex == 0)' "$MAIN"
+          grep -Fq 'val firstPage = pages.firstOrNull() ?: return false' "$MAIN"
+          grep -Fq 'updatePageAndRefreshEditor(0, updatedPage)' "$MAIN"
+          ! grep -Fq 'currentPage().copy(image = localUri' "$MAIN"
+
+          grep -Fq 'draggingInlineImageId' "$MAIN"
           grep -q 'private class NoteEditorHistory' "$MAIN"
           grep -Fq 'fun applyEditorHistory(isRedo: Boolean)' "$MAIN"
           grep -Fq 'recordTextChangeBefore' "$MAIN"
