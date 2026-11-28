@@ -91,7 +91,7 @@ jobs:
           test -f app/src/main/res/drawable/ic_d20.xml
           test -f app/src/main/res/values/ids.xml
           test -f app/src/main/res/xml/file_paths.xml
-          test -f firebase/firestore.rules
+          test -f /tmp/escudo/firebase/firestore.rules
 
           grep -q 'namespace = "br.com.escudodomestre"' app/build.gradle.kts
           grep -q 'applicationId = "br.com.escudodomestre"' app/build.gradle.kts
