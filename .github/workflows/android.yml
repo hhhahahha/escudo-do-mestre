@@ -6,24 +6,34 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Baixar projeto
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configurar Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Extrair projeto
+      - name: Extrair projeto otimizado
         shell: bash
         run: |
           set -euo pipefail
-          unzip -o escudo_mestre_v1_36_corrigido.zip -d /tmp/escudo
+          unzip -t escudo_mestre_v1_37.zip
+
+          if unzip -Z1 escudo_mestre_v1_37.zip | grep -q '^\.github/workflows/android.yml$'; then
+            echo "::error::O workflow deve existir apenas na raiz do repositório."
+            exit 1
+          fi
+
+          unzip -o escudo_mestre_v1_37.zip -d /tmp/escudo
           cp -R /tmp/escudo/app .
           cp /tmp/escudo/build.gradle.kts .
           cp /tmp/escudo/settings.gradle.kts .
@@ -69,67 +79,58 @@ jobs:
 
           unset ANDROID_SIGNING_BUNDLE STORE_PASSWORD KEY_ALIAS KEY_PASSWORD
 
-      - name: Verificar estrutura, versão, grade, marcadores, imagens e caixinhas
+      - name: Verificar estrutura, dependências e otimizações
         shell: bash
         run: |
           set -euo pipefail
           MAIN="app/src/main/java/br/com/escudodomestre/MainActivity.kt"
 
           test -f "$MAIN"
+          test -f app/src/main/AndroidManifest.xml
           test -f app/google-services.json
+          test -f app/src/main/res/drawable/ic_d20.xml
+          test -f app/src/main/res/values/ids.xml
           test -f app/src/main/res/xml/file_paths.xml
+          test -f firebase/firestore.rules
+
+          grep -q 'namespace = "br.com.escudodomestre"' app/build.gradle.kts
+          grep -q 'applicationId = "br.com.escudodomestre"' app/build.gradle.kts
+          grep -q 'versionCode = 38' app/build.gradle.kts
+          grep -q 'versionName = "1.37"' app/build.gradle.kts
           grep -q 'com.google.firebase:firebase-auth' app/build.gradle.kts
           grep -q 'com.google.firebase:firebase-firestore' app/build.gradle.kts
-          grep -q 'versionCode = 37' app/build.gradle.kts
-          grep -q 'versionName = "1.36"' app/build.gradle.kts
 
-          grep -Fq 'createdAt: Long = System.currentTimeMillis()' "$MAIN"
-          grep -Fq 'thenByDescending { it.createdAt }' "$MAIN"
-          grep -Fq 'LazyVerticalStaggeredGrid(' "$MAIN"
-          grep -Fq 'StaggeredGridItemSpan.FullLine' "$MAIN"
-          grep -Fq 'onRenameMarker: (String, String) -> Boolean' "$MAIN"
-          grep -Fq 'detectHorizontalDragGestures' "$MAIN"
-          grep -Fq 'fun containsTouch(' "$MAIN"
-          grep -Fq 'boxImageCopyExecutor = Executors.newFixedThreadPool(3)' "$MAIN"
-          grep -Fq 'private fun shareBoxWithOtherApps(' "$MAIN"
-          grep -Fq 'shareBoxWithOtherApps(context, dialogBox)' "$MAIN"
+          ! grep -q 'ui-tooling-preview' app/build.gradle.kts
+          ! grep -q 'ui-tooling"' app/build.gradle.kts
 
-          grep -Fq 'if (targetPageIndex == 0)' "$MAIN"
-          grep -Fq 'val firstPage = pages.firstOrNull() ?: return false' "$MAIN"
-          grep -Fq 'updatePageAndRefreshEditor(0, updatedPage)' "$MAIN"
-          ! grep -Fq 'currentPage().copy(image = localUri' "$MAIN"
+          ! grep -Fq 'locateTextBlockAtCursor' "$MAIN"
+          ! grep -Fq 'BoxThumbnailImage' "$MAIN"
+          ! grep -Fq 'loadInlineDrawable' "$MAIN"
 
-          grep -Fq 'draggingInlineImageId' "$MAIN"
-          grep -q 'private class NoteEditorHistory' "$MAIN"
-          grep -Fq 'fun applyEditorHistory(isRedo: Boolean)' "$MAIN"
-          grep -Fq 'recordTextChangeBefore' "$MAIN"
-          grep -Fq 'recordProgrammaticChange' "$MAIN"
-          grep -Fq 'recordEditorBeforeProgrammaticChange' "$MAIN"
-          grep -Fq 'Text("↶"' "$MAIN"
-          grep -Fq 'Text("↷"' "$MAIN"
+          ! grep -Eq '^import .*ColorDrawable|^import .*roundToInt|^import .*TextFieldValue|^import .*TextRange|^import .*onFocusChanged|^import .*FirebaseUser' "$MAIN"
 
-          grep -Fq 'label = { Text("Nome de exibição", fontSize = 12.sp) }' "$MAIN"
-          grep -Fq 'E-mail para entrar ou cadastrar' "$MAIN"
-          grep -Fq 'Senha (mínimo 6 caracteres)' "$MAIN"
-          grep -Fq 'Conta conectada' "$MAIN"
-          ! grep -Fq 'Nome de usuário' "$MAIN"
-          ! grep -Fq 'E-mail da conta' "$MAIN"
-          ! grep -Fq 'Sobre você' "$MAIN"
-
-          grep -q 'NoteInlineBoxSpan' "$MAIN"
-          grep -Fq 'private class ImageFlowMarginSpan(' "$MAIN"
-          grep -Fq 'private fun configurePaperEditor(' "$MAIN"
-          grep -Fq 'requestBoxThumbnailAsync' "$MAIN"
+          grep -Fq 'requestInlineImageAsync' "$MAIN"
+          grep -Fq 'pendingInlineImageCallbacks' "$MAIN"
+          grep -Fq 'inlineImageCache' "$MAIN"
+          grep -Fq 'refreshInlineImage' "$MAIN"
+          grep -Fq 'imageAspectRatioCache' "$MAIN"
+          grep -Fq 'private fun shareUriForOwnedImage' "$MAIN"
           grep -Fq 'boxImageCopyExecutor.execute' "$MAIN"
-          grep -Fq 'CLOUD_IMAGE_MAX_SIDE = 1536' "$MAIN"
-          grep -Fq 'CLOUD_IMAGE_MAX_BYTES = 95_000' "$MAIN"
+          grep -Fq 'coverImageExecutor = Executors.newFixedThreadPool(3)' "$MAIN"
+          grep -Fq 'private class NoteEditorHistory' "$MAIN"
+          grep -Fq 'fun applyEditorHistory(isRedo: Boolean)' "$MAIN"
           grep -Fq 'Intent.ACTION_SEND_MULTIPLE' "$MAIN"
           grep -Fq 'dragAndDropTarget' "$MAIN"
+          grep -Fq 'private fun configurePaperEditor(' "$MAIN"
+          grep -Fq 'private class ImageFlowMarginSpan(' "$MAIN"
+          grep -Fq 'private class NoteInlineBoxSpan(' "$MAIN"
+          grep -Fq 'Preserve the periodic recovery checkpoint' "$MAIN"
 
-      - name: Configurar Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Configurar Gradle e cache
+        uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: "8.9"
+          cache-provider: basic
 
       - name: Construir APK assinado
         run: gradle assembleRelease
@@ -142,9 +143,16 @@ jobs:
           test -n "$APKSIGNER"
           "$APKSIGNER" verify --verbose app/build/outputs/apk/release/app-release.apk
 
+      - name: Limpar arquivo temporário da assinatura
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/escudo-signing.json" "$RUNNER_TEMP/escudo-release.jks"
+
       - name: Salvar APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: ESCUDO-DO-MESTRE-APK-v1.36
+          name: ESCUDO-DO-MESTRE-APK-v1.37
           path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
           
