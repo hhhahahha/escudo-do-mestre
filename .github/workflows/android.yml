@@ -26,14 +26,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          unzip -t escudo_mestre_v1_37.zip
+          unzip -t escudo_mestre_v1_38.zip
 
-          if unzip -Z1 escudo_mestre_v1_37.zip | grep -q '^\.github/workflows/android.yml$'; then
+          if unzip -Z1 escudo_mestre_v1_38.zip | grep -q '^\.github/workflows/android.yml$'; then
             echo "::error::O workflow deve existir apenas na raiz do repositório."
             exit 1
           fi
 
-          unzip -o escudo_mestre_v1_37.zip -d /tmp/escudo
+          unzip -o escudo_mestre_v1_38.zip -d /tmp/escudo
           cp -R /tmp/escudo/app .
           cp /tmp/escudo/build.gradle.kts .
           cp /tmp/escudo/settings.gradle.kts .
@@ -95,8 +95,8 @@ jobs:
 
           grep -q 'namespace = "br.com.escudodomestre"' app/build.gradle.kts
           grep -q 'applicationId = "br.com.escudodomestre"' app/build.gradle.kts
-          grep -q 'versionCode = 38' app/build.gradle.kts
-          grep -q 'versionName = "1.37"' app/build.gradle.kts
+          grep -q 'versionCode = 39' app/build.gradle.kts
+          grep -q 'versionName = "1.38"' app/build.gradle.kts
           grep -q 'com.google.firebase:firebase-auth' app/build.gradle.kts
           grep -q 'com.google.firebase:firebase-firestore' app/build.gradle.kts
 
@@ -110,6 +110,13 @@ jobs:
           ! grep -Eq '^import .*ColorDrawable|^import .*roundToInt|^import .*TextFieldValue|^import .*TextRange|^import .*onFocusChanged|^import .*FirebaseUser' "$MAIN"
 
           grep -Fq 'requestInlineImageAsync' "$MAIN"
+          grep -Fq 'refreshBoxThumbnailForPage' "$MAIN"
+          grep -Fq 'editorPageId' "$MAIN"
+          grep -Fq 'boxThumbnailExecutor = Executors.newFixedThreadPool(2)' "$MAIN"
+          grep -Fq 'editable.removeSpan(span)' "$MAIN"
+          grep -Fq 'BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)' "$MAIN"
+          grep -Fq 'BitmapFactory.decodeFile(filePath, options)' "$MAIN"
+          grep -Fq 'synchronized(boxThumbnailCache)' "$MAIN"
           grep -Fq 'pendingInlineImageCallbacks' "$MAIN"
           grep -Fq 'inlineImageCache' "$MAIN"
           grep -Fq 'refreshInlineImage' "$MAIN"
@@ -151,7 +158,7 @@ jobs:
       - name: Salvar APK
         uses: actions/upload-artifact@v7
         with:
-          name: ESCUDO-DO-MESTRE-APK-v1.37
+          name: ESCUDO-DO-MESTRE-APK-v1.38
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
